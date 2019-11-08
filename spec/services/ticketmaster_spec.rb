@@ -57,10 +57,13 @@ describe "Ticketmaster service" do
         apikey: Gigs::Application.credentials.ticketmaster_key 
       }
       path = 'https://app.ticketmaster.com/discovery/v2/events.json'
-      response = HTTParty.get(path, query: query).parsed_response
-      errors = JSON::Validator.fully_validate(schema, response)
 
-      expect(errors).to eq []
+      VCR.use_cassette 'services/ticketmaster' do
+        response = HTTParty.get(path, query: query).parsed_response
+        errors = JSON::Validator.fully_validate(schema, response)
+
+        expect(errors).to eq []
+      end
     end
   end
 end
