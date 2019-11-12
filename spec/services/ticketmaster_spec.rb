@@ -58,7 +58,7 @@ describe "Ticketmaster service" do
       }
       path = 'https://app.ticketmaster.com/discovery/v2/events.json'
 
-      VCR.use_cassette 'services/ticketmaster' do
+      VCR.use_cassette 'services/ticketmaster_service_api', re_record_interval: 1.day do
         response = HTTParty.get(path, query: query).parsed_response
         errors = JSON::Validator.fully_validate(schema, response)
 
@@ -66,6 +66,42 @@ describe "Ticketmaster service" do
       end
     end
   end
-end
 
-#curl --include 'https://app.ticketmaster.com/discovery/v2/events.json?classificationName=Comedian&apikey=kW7Cb9udjrC7APKvqYA9mtaSe2KWRMGf'
+  describe '#get_all_gigs' do
+
+    let!(:schema) {
+      {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['name', 'ticketmaster_id', 'venue', 'act'],
+          properties: {
+            name: { type: 'string' },
+            ticketmaster_id: { type: 'string' },
+            venue: {
+              type: 'object',
+              required: ['name', 'ticketmaster_id'],
+              properties: {
+                #name: { type: 'string' }, Sometimes Ticketmaster returns null venue names!
+                ticketmaster_id: { type: 'string' },
+              }
+            },
+            act: {
+              type: 'object',
+              required: ['name', 'ticketmaster_id'],
+              properties: {
+                name: { type: 'string' },
+                ticketmaster_id: { type: 'string' },
+      }}}}}
+    }
+
+    it "returns the schema we're expecting" do
+      VCR.use_cassette 'services/ticketmaster_service_get_all_gigs', re_record_interval: 1.day do
+        gigs = TicketmasterService.get_all_gigs
+        errors = JSON::Validator.fully_validate(schema, gigs)
+        expect(errors).to eq []
+      end
+    end
+
+  end
+end
