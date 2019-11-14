@@ -41,4 +41,25 @@ module TicketmasterService
     gigs
   end
 
+  # Iterate over every gig from .get_all_gigs. For each not already existing, create it. 
+  # The newly created ones will have acts and venues that may or may not already exist locally.
+  # Query this. If they don't, create them too.
+  # Param: an array of gig hashes.
+  def self.update_existing_gigs(gigs)
+
+    gigs.each do |incoming_gig|
+
+      Gig.find_or_create_by ticketmaster_id: incoming_gig[:ticketmaster_id] do |gig|
+        
+        gig.act = Act.find_or_create_by ticketmaster_id: incoming_gig[:act][:ticketmaster_id] do |act|
+          act.name = incoming_gig[:act][:name]
+        end
+
+        gig.venue = Venue.find_or_create_by ticketmaster_id: incoming_gig[:venue][:ticketmaster_id] do |venue|
+          venue.name = incoming_gig[:venue][:name]
+        end
+      end
+    end
+  end
+
 end
