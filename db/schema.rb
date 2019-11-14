@@ -10,24 +10,30 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_09_10_020025) do
+ActiveRecord::Schema.define(version: 2019_11_13_063352) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "acts", force: :cascade do |t|
     t.string "name"
+    t.string "ticketmaster_id"
+    t.index ["ticketmaster_id"], name: "index_acts_on_ticketmaster_id"
   end
 
   create_table "gigs", force: :cascade do |t|
-    t.bigint "acts_id"
-    t.bigint "venues_id"
-    t.index ["acts_id"], name: "index_gigs_on_acts_id"
-    t.index ["venues_id"], name: "index_gigs_on_venues_id"
+    t.bigint "act_id"
+    t.bigint "venue_id"
+    t.string "ticketmaster_id"
+    t.index ["act_id"], name: "index_gigs_on_act_id"
+    t.index ["ticketmaster_id"], name: "index_gigs_on_ticketmaster_id"
+    t.index ["venue_id"], name: "index_gigs_on_venue_id"
   end
 
   create_table "venues", force: :cascade do |t|
     t.string "name"
+    t.string "ticketmaster_id"
+    t.index ["ticketmaster_id"], name: "index_venues_on_ticketmaster_id"
   end
 
 end
