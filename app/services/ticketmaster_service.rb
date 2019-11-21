@@ -10,10 +10,11 @@ module TicketmasterService
     # We shall populate this little bugger thusly:
     # gigs = [{ t_id, name, venue: { t_id, name }, act: { t_id, name }}, ...]
     gigs = []
-
     page = 0
+    retries = 0
+
     while true do
-      Rails.logger.info "attempting page #{page}"
+
       begin
         response = HTTParty.get(EVENTS_URL, query: {
           classificationName: 'Comedian',
@@ -21,11 +22,17 @@ module TicketmasterService
           size: 20,
           apikey: Gigs::Application.credentials.ticketmaster_key
         })
+
       rescue Net::OpenTimeout => e
-        redo
-        Rails.logger.info "Timeout on page #{page}! Reattempting"
+        if retries >= 10
+          raise "Something is seriously wrong here, here's what HTTParty has to say:\n\n#{ e.message }"
+        else
+          retries += 1
+          redo
+        end
+        
       end
-      Rails.logger.info "attempted page #{page}"
+
       response.code == 400 ? break : page += 1
 
       response.parsed_response['_embedded']['events'].each do |event|
