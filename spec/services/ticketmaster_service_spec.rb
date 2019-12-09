@@ -107,7 +107,7 @@ describe "Ticketmaster service" do
   # Assumptions: we won't ever get an existing gig with changed/updated attributes or relationships.
   # Though we were wrong about Ticketmaster venues never having null names, weren't we. Maybe we're
   # wrong about this too. But let's cross that bridge should we ever come to it.
-  describe '.update_existing_gigs' do
+  describe '.update_existing_gigs_with' do
 
     let!(:act1) { create :act, ticketmaster_id: 'aid1' }
     let!(:venue1) { create :venue, ticketmaster_id: 'vid1' }
@@ -164,19 +164,19 @@ describe "Ticketmaster service" do
     }
 
     it "creates two new gigs" do
-      expect { TicketmasterService.update_existing_gigs(incoming_gigs) }
+      expect { TicketmasterService.update_existing_gigs_with(incoming_gigs) }
         .to change { Gig.count }
         .by 2
     end
 
     it "creates one new venue" do
-      expect { TicketmasterService.update_existing_gigs(incoming_gigs) }
+      expect { TicketmasterService.update_existing_gigs_with(incoming_gigs) }
         .to change { Venue.count }
         .by 1
     end
 
     it "creates one new act" do
-      expect { TicketmasterService.update_existing_gigs(incoming_gigs) }
+      expect { TicketmasterService.update_existing_gigs_with(incoming_gigs) }
         .to change { Act.count }
         .by 1
     end
