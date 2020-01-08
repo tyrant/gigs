@@ -26,10 +26,26 @@ describe "Search" do
   let!(:gig11) { create :gig, act: act5, venue: venue4 }
 
   before {
-    get 'api/v1/search', params: params
+    get '/api/v1/search', params: params
   }
 
   describe "Filtering by Act" do
+
+    context "Not supplying any act IDs" do
+
+      let(:params) {}
+
+      describe "returning every single venue" do
+
+        subject { response_json }
+
+        it { is_expected.to include(
+          *[venue1, venue2, venue3, venue4, venue5].map { |venue| 
+            venue.as_json(include: :gigs) 
+          }
+        )}
+      end
+    end
 
     context "Acts 1, 2, 5" do
 
@@ -37,41 +53,58 @@ describe "Search" do
         { acts: [act1.id, act2.id, act5.id] }
       }
 
-      describe "returning venues 2, 4" do
+      describe "returning only venues 2, 3, 4" do
+        
+        subject { response_json }
 
-        let(:venue_ids) {
-          response.body['venues'].map(&:id)
-        }
+        it { is_expected.to include(
+          *[venue2, venue3, venue4].map { |venue| 
+            venue.as_json(include: :gigs) 
+          }
+        )}
 
-        it { expect(venue_ids).to include venue2.id }
-        it { expect(venue_ids).to include venue4.id }
+        it { is_expected.not_to include(
+          *[venue1, venue5].map { |venue| 
+            venue.as_json(include: :gigs) 
+          }
+        )}
+
+        describe "ordering"
       end
 
-      describe "attaching gigs 1, 2 to venue 2" do
+      describe "returning only gigs 1, 2 with venue 2" do
 
-        let(:gig_ids_for_venue_2) {
-          response.body['venues'].filter do |response_venue|
-            response_venue.id == venue2.id
-          end['gigs'].map(&:id)
+        subject {
+          response_json.find do |response_venue|
+            response_venue['id'] == venue2.id
+          end['gigs']
         }
 
-        it { expect(gig_ids_for_venue_2).to include gig1.id }
-        it { expect(gig_ids_for_venue_2).to include gig2.id }
+        it { is_expected.to include(
+          *[gig1, gig2].map(&:as_json)
+        )}
+
+        it { is_expected.not_to include(
+          *[gig3, gig4, gig5, gig6, gig7, gig8, gig9, gig10, gig11].map(&:as_json)
+        )}
       end
 
-      describe "attaching gig 11 to venue 4" do
+      describe "returning only gigs 10, 11 vith venue 4" do
 
-        let(:gig_ids_for_venue_4) {
-          response.body['venues'].filter do |response_venue|
-            response_venue.id == venue4.id
-          end['gigs'].map(&:id)
+        subject {
+          response_json.find do |response_venue|
+            response_venue['id'] == venue4.id
+          end['gigs']
         }
 
-        it { expect(gig_ids_for_venue_4).to include gig11.id }
+        it { is_expected.to include(
+          *[gig10, gig11].map(&:as_json)
+        )}
 
-        it "does not attach gig 10 to venue 4 - only gigs performed by the acts queried" do
-          expect(gig_ids_for_venue_4).not_to include gig10.id
-        end
+        it { is_expected.not_to include(
+          *[gig1, gig2, gig3, gig4, gig5, gig6, gig7, gig8, gig9].map(&:as_json)
+        )}
+
       end
     end
 
@@ -82,7 +115,7 @@ describe "Search" do
       }
 
       it "returns zero venues" do
-        expect(response.body['venues'].length).to eq 0
+        expect(response_json.length).to eq 0
       end
     end
 
@@ -92,43 +125,106 @@ describe "Search" do
         { acts: [act2.id, act4.id] }
       }
 
-      describe "returning venues 3, 4" do
+      describe "returning only venues 3, 4" do
 
-        let(:venue_ids) {
-          response.body['venues'].map(&:id)
-        } 
+        subject { response_json }
 
-        it { expect(venue_ids).to include venue3.id }
-        it { expect(venue_ids).to include venue4.id }
-      end
-
-      describe "attaching gigs 6, 7, 8, 9 to venue 3" do
-
-        let(:gig_ids_for_venue_3) {
-          response.body['venues'].filter do |response_venue|
-            response_venue.id == venue3.id
-          end['gigs'].map(&:id)
+        it { 
+          is_expected.to include(
+            *[venue3, venue4].map {|v| 
+              v.as_json(include: :gigs) 
+            }
+          )
         }
 
-        it { expect(gig_ids_for_venue_3).to include gig6.id }
-        it { expect(gig_ids_for_venue_3).to include gig7.id }
-        it { expect(gig_ids_for_venue_3).to include gig8.id }
-        it { expect(gig_ids_for_venue_3).to include gig9.id }
+        it { 
+          is_expected.not_to include(
+            *[venue1, venue2, venue5].map {|v| 
+              v.as_json(include: :gigs) 
+            }
+          )
+        }
       end
 
-      describe "attaching gig 10 to venue 4" do
+      describe "returning only gigs 3, 4, 5, 6, 7, 8, 9 with venue 3" do
 
-        let(:gig_ids_for_venue_4) {
-          response.body['venues'].filter do |response_venue|
-            response_venue.id == venue3.id
-          end['gigs'].map(&:id)
+        subject {
+          response_json.find do |response_venue|
+            response_venue['id'] == venue3.id
+          end['gigs']
         }
 
-        it { expect(gig_ids_for_venue_4).to include gig10.id }
+        it { 
+          is_expected.to include(
+            *[gig3, gig4, gig5, gig6, gig7, gig8, gig9].map(&:as_json)
+          )
+        }
 
-        it "does not attach gig 11 - 11 attaches to act 5, which isn't in params" do
-          expect(gig_ids_for_venue_4).to include gig11.id
-        end
+        it { 
+          is_expected.not_to include(
+            *[gig1, gig2, gig10, gig11].map(&:as_json)
+          )
+        }
+      end
+
+      describe "returing only gigs 10, 11 with venue 4" do
+
+        subject {
+          response_json.find do |response_venue|
+            response_venue['id'] == venue4.id
+          end['gigs']
+        }
+
+        it { 
+          is_expected.to include(
+            *[gig10, gig11].map(&:as_json)
+          )
+        }
+
+        it { 
+          is_expected.not_to include(
+            *[gig1, gig2, gig3, gig4, gig5, gig6, gig7, gig8, gig9].map(&:as_json)
+          )
+        }
+      end
+    end
+
+    context "Act ID that isn't in the database" do
+
+      let(:params) {
+        { acts: [act1.id, 99999999] }
+      }
+
+      describe "just ignores it, returns venues for existing, valid acts" do
+
+        subject { response_json }
+
+        it { 
+          is_expected.to include(
+            *[venue2, venue3].map {|v| 
+              v.as_json(include: :gigs) 
+            }
+          )
+        }
+
+        it { 
+          is_expected.not_to include(
+            *[venue1, venue4, venue5].map {|v| 
+              v.as_json(include: :gigs) 
+            }
+          )
+        }
+      end
+    end
+
+    context "Malformed act ID" do
+      
+      let(:params) {
+        { acts: ['blargh string bad'] }
+      }
+
+      it "complains" do
+        expect(response.body['errors'])
       end
     end
   end
