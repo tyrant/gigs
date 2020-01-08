@@ -6,7 +6,7 @@ class Api::V1::SearchController < ApplicationController
   # Return all venues matching:
   # 
   def index 
-    venues = Venue.left_outer_joins(gigs: :act).includes(gigs: :act)
+    venues = Venue.left_outer_joins(gigs: :act)
     venues = venues.where('acts.id IN (?)', search_params[:acts]) if search_params.key?(:acts)
 
     render json: venues.as_json(include: :gigs)
@@ -17,8 +17,10 @@ class Api::V1::SearchController < ApplicationController
   end
 
   def massage_stringly_typed_params!
-    params[:acts].each do |act_id|
-      act_id = act_id.to_i if act_id.is_a? String
+    if params.key? :acts
+      params[:acts] = params[:acts].map do |act_id|
+        act_id.is_a?(String) ? act_id.to_i : act_id
+      end
     end
   end
 
