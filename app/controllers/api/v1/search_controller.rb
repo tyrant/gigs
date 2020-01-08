@@ -19,7 +19,7 @@ class Api::V1::SearchController < ApplicationController
   def massage_stringly_typed_params!
     if params.key? :acts
       params[:acts] = params[:acts].map do |act_id|
-        act_id.is_a?(String) ? act_id.to_i : act_id
+        act_id.to_i != 0 ? act_id.to_i : act_id
       end
     end
   end

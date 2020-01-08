@@ -129,21 +129,17 @@ describe "Search" do
 
         subject { response_json }
 
-        it { 
-          is_expected.to include(
-            *[venue3, venue4].map {|v| 
-              v.as_json(include: :gigs) 
-            }
-          )
-        }
+        it { is_expected.to include(
+          *[venue3, venue4].map { |venue| 
+            venue.as_json(include: :gigs) 
+          }
+        )}
 
-        it { 
-          is_expected.not_to include(
-            *[venue1, venue2, venue5].map {|v| 
-              v.as_json(include: :gigs) 
-            }
-          )
-        }
+        it { is_expected.not_to include(
+          *[venue1, venue2, venue5].map {|venue| 
+            venue.as_json(include: :gigs) 
+          }
+        )}
       end
 
       describe "returning only gigs 3, 4, 5, 6, 7, 8, 9 with venue 3" do
@@ -154,17 +150,13 @@ describe "Search" do
           end['gigs']
         }
 
-        it { 
-          is_expected.to include(
-            *[gig3, gig4, gig5, gig6, gig7, gig8, gig9].map(&:as_json)
-          )
-        }
+        it { is_expected.to include(
+          *[gig3, gig4, gig5, gig6, gig7, gig8, gig9].map(&:as_json)
+        )}
 
-        it { 
-          is_expected.not_to include(
-            *[gig1, gig2, gig10, gig11].map(&:as_json)
-          )
-        }
+        it { is_expected.not_to include(
+          *[gig1, gig2, gig10, gig11].map(&:as_json)
+        )}
       end
 
       describe "returing only gigs 10, 11 with venue 4" do
@@ -223,8 +215,12 @@ describe "Search" do
         { acts: ['blargh string bad'] }
       }
 
-      it "complains" do
-        expect(response.body['errors'])
+      it "has status=error" do
+        expect(response_json['status']).to eq 'error'
+      end
+
+      it "contains an error message" do
+        expect(response_json['error'][0]).to include "The property '#/acts/0' of type string did not match the following type: integer"
       end
     end
   end
