@@ -29,6 +29,15 @@ describe "Search" do
     get '/api/v1/search', params: params
   }
 
+  describe "Querying API with zero params of any kind" do
+
+    let(:params) {}
+
+    it "returns the jsonapi Content-Type" do
+      expect(response.headers['Content-Type']).to eq 'application/vnd.api+json; charset=utf-8'
+    end
+  end
+
   describe "Filtering by Act" do
 
     context "Not supplying any act IDs" do
