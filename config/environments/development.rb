@@ -6,11 +6,12 @@ Rails.application.configure do
   # since you don't have to restart the web server when you make code changes.
   config.cache_classes = false
 
-  # Do not eager load code on boot.
-  config.eager_load = false
+  # As per jsonapi-resources.com/v0.10/guide/basic_usage.html#Configure-Development-Environment
+  # Eager load code on boot so JSONAPI-Resources resources are loaded and processed globally
+  config.eager_load = true
 
   # Show full error reports.
-  config.consider_all_requests_local = true
+  config.consider_all_requests_local = false
 
   # Enable/disable caching. By default caching is disabled.
   # Run rails dev:cache to toggle caching.
