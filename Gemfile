@@ -52,6 +52,7 @@ group :test do
   gem 'rspec-rails'
   gem 'database_cleaner'
   gem 'vcr'
+  gem 'shoulda-matchers'
 end
 
 
