@@ -1,7 +1,23 @@
 require 'rails_helper'
 
+shared_examples "general jsonapi behaviour for" do |model|
+
+  it "returns the jsonapi Content-Type" do
+    expect(response.headers['Content-Type']).to eq 'application/vnd.api+json'
+  end
+
+  it "returns an array of jsonapi objects" do
+    expect(response_json['data']).to match_jsonapi_array_schema
+  end
+
+  it "returns all type=='model_name'" do
+    expect(response_json['data']).to match_jsonapi_array_types_for model.model_name.plural
+  end
+end
+
 describe "Search" do
 
+  # Create a big bunch of pseudorandomly linked 
   # We're creating each one individually so we can use their IDs in search.
   let!(:act1) { create :act }
   let!(:act2) { create :act }
@@ -31,10 +47,7 @@ describe "Search" do
 
   describe "Querying API with zero params of any kind" do
     let(:params) { {} }
-
-    it "returns the jsonapi Content-Type" do
-      expect(response.headers['Content-Type']).to eq 'application/vnd.api+json'
-    end
+    include_examples "general jsonapi behaviour for", Venue
   end
 
   describe "Filtering by Act" do
