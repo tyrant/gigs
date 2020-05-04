@@ -26,15 +26,14 @@ describe "Search" do
   let!(:gig11) { create :gig, act: act5, venue: venue4 }
 
   before {
-    get '/api/v1/search', params: params
+    get api_v1_venues_path, params: params
   }
 
   describe "Querying API with zero params of any kind" do
-
-    let(:params) {}
+    let(:params) { {} }
 
     it "returns the jsonapi Content-Type" do
-      expect(response.headers['Content-Type']).to eq 'application/vnd.api+json; charset=utf-8'
+      expect(response.headers['Content-Type']).to eq 'application/vnd.api+json'
     end
   end
 

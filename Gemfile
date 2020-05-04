@@ -32,7 +32,7 @@ gem 'httparty'
 gem 'json-schema'
 gem 'webmock'
 gem 'whenever'
-gem 'jsonapi-resources'
+gem 'jsonapi-resources', '0.9.11'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
