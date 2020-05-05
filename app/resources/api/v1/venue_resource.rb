@@ -2,7 +2,7 @@ module Api
   module V1
     class VenueResource < JSONAPI::Resource
 
-      attributes :name, :ticketmaster_id
+      attributes :created_at, :updated_at, :name, :ticketmaster_id
       has_many :gigs, eager_load_on_include: false
 
       def fetchable_fields

@@ -2,7 +2,7 @@ module Api
   module V1
     class GigResource < JSONAPI::Resource
 
-      attributes :at, :ticketmaster_id
+      attributes :created_at, :updated_at, :at, :ticketmaster_id
       has_one :venue
       has_one :act
 

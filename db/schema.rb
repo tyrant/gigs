@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_01_09_010601) do
+ActiveRecord::Schema.define(version: 2020_05_04_095206) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -18,6 +18,8 @@ ActiveRecord::Schema.define(version: 2020_01_09_010601) do
   create_table "acts", force: :cascade do |t|
     t.string "name"
     t.string "ticketmaster_id"
+    t.datetime "created_at", default: "2020-05-05 02:05:15", null: false
+    t.datetime "updated_at", default: "2020-05-05 02:05:15", null: false
     t.index ["ticketmaster_id"], name: "index_acts_on_ticketmaster_id"
   end
 
@@ -26,6 +28,8 @@ ActiveRecord::Schema.define(version: 2020_01_09_010601) do
     t.bigint "venue_id"
     t.string "ticketmaster_id"
     t.datetime "at"
+    t.datetime "created_at", default: "2020-05-05 02:05:15", null: false
+    t.datetime "updated_at", default: "2020-05-05 02:05:15", null: false
     t.index ["act_id"], name: "index_gigs_on_act_id"
     t.index ["ticketmaster_id"], name: "index_gigs_on_ticketmaster_id"
     t.index ["venue_id"], name: "index_gigs_on_venue_id"
@@ -34,6 +38,8 @@ ActiveRecord::Schema.define(version: 2020_01_09_010601) do
   create_table "venues", force: :cascade do |t|
     t.string "name"
     t.string "ticketmaster_id"
+    t.datetime "created_at", default: "2020-05-05 02:05:15", null: false
+    t.datetime "updated_at", default: "2020-05-05 02:05:15", null: false
     t.index ["ticketmaster_id"], name: "index_venues_on_ticketmaster_id"
   end
 
