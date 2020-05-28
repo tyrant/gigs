@@ -1,17 +1,17 @@
 require 'rails_helper'
 
-shared_examples "general jsonapi behaviour for" do |model|
+shared_examples "general jsonapi behaviour for" do |klass|
 
-  it "returns the jsonapi Content-Type" do
+  it 'returns the jsonapi Content-Type' do
     expect(response.headers['Content-Type']).to eq 'application/vnd.api+json'
   end
 
-  it "returns an array of jsonapi objects" do
+  it 'returns an array of jsonapi objects' do
     expect(response_json['data']).to match_jsonapi_array_schema
   end
 
-  it "returns all type=='model_name'" do
-    expect(response_json['data']).to match_jsonapi_array_types_for model.model_name.plural
+  it 'returns all type=="klass"' do
+    expect(response_json['data']).to match_jsonapi_array_types_for klass
   end
 end
 
@@ -24,47 +24,59 @@ describe "Search" do
   let!(:act3) { create :act }
   let!(:act4) { create :act }
   let!(:act5) { create :act }
-  let!(:venue1) { create :venue }
-  let!(:venue2) { create :venue }
-  let!(:venue3) { create :venue }
-  let!(:venue4) { create :venue }
-  let!(:venue5) { create :venue }
-  let!(:gig1) { create :gig, act: act1, venue: venue2 }
-  let!(:gig2) { create :gig, act: act1, venue: venue2 }
-  let!(:gig3) { create :gig, act: act1, venue: venue3 }
-  let!(:gig4) { create :gig, act: act3, venue: venue3 }
-  let!(:gig5) { create :gig, act: act3, venue: venue3 }
-  let!(:gig6) { create :gig, act: act4, venue: venue3 }
-  let!(:gig7) { create :gig, act: act4, venue: venue3 }
-  let!(:gig8) { create :gig, act: act4, venue: venue3 }
-  let!(:gig9) { create :gig, act: act4, venue: venue3 }
-  let!(:gig10) { create :gig, act: act4, venue: venue4 }
-  let!(:gig11) { create :gig, act: act5, venue: venue4 }
+
+  let!(:venue1) { create :venue, updated_at: Time.now - 9.days }
+  let!(:venue2) { create :venue, updated_at: Time.now - 3.days }
+  let!(:venue3) { create :venue, updated_at: Time.now - 7.days }
+  let!(:venue4) { create :venue, updated_at: Time.now - 2.days }
+  let!(:venue5) { create :venue, updated_at: Time.now - 8.days }
+
+  let!(:gig1) { create :gig, act: act1, venue: venue2, at: Time.now + 3.days }
+  let!(:gig2) { create :gig, act: act1, venue: venue2, at: Time.now + 4.days }
+  let!(:gig3) { create :gig, act: act1, venue: venue3, at: Time.now + 5.days }
+  let!(:gig4) { create :gig, act: act3, venue: venue3, at: Time.now + 6.days }
+  let!(:gig5) { create :gig, act: act3, venue: venue3, at: Time.now + 7.days }
+  let!(:gig6) { create :gig, act: act4, venue: venue3, at: Time.now + 8.days }
+  let!(:gig7) { create :gig, act: act4, venue: venue3, at: Time.now + 9.days }
+  let!(:gig8) { create :gig, act: act4, venue: venue3, at: Time.now + 10.days }
+  let!(:gig9) { create :gig, act: act4, venue: venue3, at: Time.now + 11.days }
+  let!(:gig10) { create :gig, act: act4, venue: venue4, at: Time.now + 12.days }
+  let!(:gig11) { create :gig, act: act5, venue: venue4, at: Time.now + 13.days }
 
   before {
     get api_v1_venues_path, params: params
   }
 
-  describe "Querying API with zero params of any kind" do
+  describe 'Querying API with zero params of any kind' do
+    include_examples 'general jsonapi behaviour for', Venue
     let(:params) { {} }
-    include_examples "general jsonapi behaviour for", Venue
   end
 
   describe "Filtering by Act" do
+    include_examples 'general jsonapi behaviour for', Venue
 
     context "Not supplying any act IDs" do
 
-      let(:params) {}
+      let(:params) { 
+        { filter: { acts: '' } }
+      }
 
-      describe "returning every single venue" do
+      it "returns every single venue, ordered by updated_at desc" do
+        # Manually order our five venues descending by updated_at
+        resources = [venue4, venue2, venue3, venue5, venue1].map do |venue|
+          Api::V1::VenueResource.new(venue, { foo: 'bar' })
+        end
 
-        subject { response_json }
+        # jsonapi-resources 0.9 has a bug concerning link construction - all its
+        # other serialized data has string keys, but its data keys are symbols.
+        # We *could* jump into its callbacks and manually stringify its keys ...
+        # ... Or just call #deep_stringify_keys here.
+        serialized_resources = JSONAPI::ResourceSerializer
+          .new(Api::V1::VenueResource)
+          .serialize_to_hash(resources)
+          .deep_stringify_keys!
 
-        it { is_expected.to include(
-          *[venue1, venue2, venue3, venue4, venue5].map { |venue| 
-            venue.as_json(include: :gigs) 
-          }
-        )}
+        expect(response_json['data']).to eq serialized_resources['data']
       end
     end
 
