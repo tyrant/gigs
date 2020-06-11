@@ -14,7 +14,7 @@ module Api
           values.map &:to_i
         },
         apply: -> (records, value, _options) {
-          q = records.includes(gigs: :act)
+          q = records.includes(gigs: :act).joins(gigs: :act)
           q = q.where('acts.id IN (:acts)', acts: value) if value.length > 0
           q
         }

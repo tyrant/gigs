@@ -57,20 +57,18 @@ describe "Search" do
 
     context "Not supplying any act IDs" do
 
-      let(:params) { 
-        { filter: { acts: '' } }
-      }
+      let(:params) { { filter: { acts: '' } } }
 
       it "returns every single venue, ordered by updated_at desc" do
         # Manually order our five venues descending by updated_at
         resources = [venue4, venue2, venue3, venue5, venue1].map do |venue|
-          Api::V1::VenueResource.new(venue, { foo: 'bar' })
+          Api::V1::VenueResource.new(venue, nil)
         end
 
         # jsonapi-resources 0.9 has a bug concerning link construction - all its
         # other serialized data has string keys, but its data keys are symbols.
         # We *could* jump into its callbacks and manually stringify its keys ...
-        # ... Or just call #deep_stringify_keys here.
+        # ... Or just call #deep_stringify_keys! here.
         serialized_resources = JSONAPI::ResourceSerializer
           .new(Api::V1::VenueResource)
           .serialize_to_hash(resources)
@@ -82,25 +80,36 @@ describe "Search" do
 
     context "Acts 1, 2, 5" do
 
-      let(:params) {
-        { acts: [act1.id, act2.id, act5.id] }
-      }
+      let(:acts) { [act1, act2, act5] }
 
-      describe "returning only venues 2, 3, 4" do
-        
-        subject { response_json }
+      let(:params) { { filter: { acts: acts.map(&:id).join(',') } } }
 
-        it { is_expected.to include(
-          *[venue2, venue3, venue4].map { |venue| 
-            venue.as_json(include: :gigs) 
-          }
-        )}
+      describe "returning only venues 4, 2, 3: updated_at desc" do
 
-        it { is_expected.not_to include(
-          *[venue1, venue5].map { |venue| 
-            venue.as_json(include: :gigs) 
-          }
-        )}
+        let(:venueresources_4_2_3) {
+          [venue4, venue2, venue3].map { |v| Api::V1::VenueResource.new(v, nil) }
+        } 
+
+        let(:svrs_4_2_3_data) {
+          JSONAPI::ResourceSerializer.new(Api::V1::VenueResource)
+            .serialize_to_hash(venueresources_4_2_3)
+            .deep_stringify_keys!['data']
+        }
+
+        let(:svrs_4_2_3_data_w_gigs_for_acts_1_2_5) {
+          svrs_4_2_3_data.each do |svr| 
+            svr['relationships']['gigs']['data'].select! do |sgr|
+              acts.include? Gig.find(sgr['id']).act
+            end
+          end
+        }
+
+        it "returns only the venues and gigs attended by Acts 1, 2 and 5" do
+          expect(svrs_4_2_3_data_w_gigs_for_acts_1_2_5)
+            .to eq response_json['data']
+        end
+
+
 
         describe "ordering"
       end
