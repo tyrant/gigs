@@ -17,31 +17,30 @@ end
 
 describe "Search" do
 
-  # Create a big bunch of pseudorandomly linked 
-  # We're creating each one individually so we can use their IDs in search.
-  let!(:act1) { create :act }
-  let!(:act2) { create :act }
-  let!(:act3) { create :act }
-  let!(:act4) { create :act }
-  let!(:act5) { create :act }
+  # Create a big bunch of pseudorandomly linked models.
+  # We only require five identical Acts, so we can just use create_list
+  # to create an array of them directly.
+  let!(:acts) { create_list :act, 5 }
 
-  let!(:venue1) { create :venue, updated_at: Time.now - 9.days }
-  let!(:venue2) { create :venue, updated_at: Time.now - 3.days }
-  let!(:venue3) { create :venue, updated_at: Time.now - 7.days }
-  let!(:venue4) { create :venue, updated_at: Time.now - 2.days }
-  let!(:venue5) { create :venue, updated_at: Time.now - 8.days }
-
-  let!(:gig1) { create :gig, act: act1, venue: venue2, at: Time.now + 3.days }
-  let!(:gig2) { create :gig, act: act1, venue: venue2, at: Time.now + 4.days }
-  let!(:gig3) { create :gig, act: act1, venue: venue3, at: Time.now + 5.days }
-  let!(:gig4) { create :gig, act: act3, venue: venue3, at: Time.now + 6.days }
-  let!(:gig5) { create :gig, act: act3, venue: venue3, at: Time.now + 7.days }
-  let!(:gig6) { create :gig, act: act4, venue: venue3, at: Time.now + 8.days }
-  let!(:gig7) { create :gig, act: act4, venue: venue3, at: Time.now + 9.days }
-  let!(:gig8) { create :gig, act: act4, venue: venue3, at: Time.now + 10.days }
-  let!(:gig9) { create :gig, act: act4, venue: venue3, at: Time.now + 11.days }
-  let!(:gig10) { create :gig, act: act4, venue: venue4, at: Time.now + 12.days }
-  let!(:gig11) { create :gig, act: act5, venue: venue4, at: Time.now + 13.days }
+  # Here, we need another five Venues, but with unique updated_at values,
+  # so we'll neeed to iterate through an integer array and use its values
+  # to populate each Venue's updated_at attribute.
+  let!(:venues) {
+    [9, 3, 7, 2, 8].map do |days_ago|
+      create :venue, updated_at: Time.now - days_ago.days
+    end 
+  }
+ 
+  # Same again, but with gigs: create eleven Gigs, each with unique
+  # act_id, venue_id and at attribute values. They're all integers,
+  # so we can just simply use an array of arrays: each array-entry is
+  # [act_id, venue_id], and that entry's index value in the parent 
+  # array can build its at attribute value. 
+  let!(:gigs) {
+    [[0,0], [0,0], [0,0], [2,1], [2,1], [3,1], [3,1], [3,1], [3,1], [3,2], [4,2]].each_with_index.map do |ids, i|
+      create :gig, act: acts[ids[0]], venue: venues[ids[1]], at: Time.now + (i+3).days 
+    end
+  }
 
   before {
     get api_v1_venues_path, params: params
